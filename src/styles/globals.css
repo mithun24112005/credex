@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 24% 12%;
+    --card: 210 22% 97%;
+    --card-foreground: 220 24% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 24% 12%;
+    --primary: 214 78% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 24% 92%;
+    --secondary-foreground: 220 24% 16%;
+    --muted: 214 20% 94%;
+    --muted-foreground: 218 12% 43%;
+    --accent: 214 62% 91%;
+    --accent-foreground: 216 72% 30%;
+    --border: 214 18% 86%;
+    --input: 214 18% 86%;
+    --ring: 214 78% 52%;
+    --radius: 1rem;
+  }
+
+  .dark {
+    --background: 225 24% 6%;
+    --foreground: 216 28% 94%;
+    --card: 222 21% 10%;
+    --card-foreground: 216 28% 94%;
+    --popover: 222 21% 10%;
+    --popover-foreground: 216 28% 94%;
+    --primary: 213 82% 62%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 220 18% 15%;
+    --secondary-foreground: 216 28% 92%;
+    --muted: 220 17% 14%;
+    --muted-foreground: 218 11% 65%;
+    --accent: 217 28% 18%;
+    --accent-foreground: 213 82% 78%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 213 82% 62%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+}
+
+@layer utilities {
+  .container-px {
+    @apply px-5 sm:px-8 lg:px-10;
+  }
+
+  .surface-line {
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.35) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.35) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: linear-gradient(to bottom, black, transparent 72%);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
