@@ -23,7 +23,7 @@ export function LoadingStep() {
     }, 560);
 
     const timeout = window.setTimeout(() => {
-      router.push("/results/demo");
+      router.push("/results/live");
     }, 3300);
 
     return () => {
