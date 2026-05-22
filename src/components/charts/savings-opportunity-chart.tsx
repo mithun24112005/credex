@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Bar,
   BarChart,
@@ -18,7 +19,7 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0
 });
 
-export function SavingsOpportunityChart({ data }: { data: SavingsOpportunity[] }) {
+export const SavingsOpportunityChart = memo(function SavingsOpportunityChart({ data }: { data: SavingsOpportunity[] }) {
   const chartData = data.length > 0 ? data : [{ toolName: "No major savings", savings: 0 }];
 
   return (
@@ -64,4 +65,4 @@ export function SavingsOpportunityChart({ data }: { data: SavingsOpportunity[] }
       </ResponsiveContainer>
     </div>
   );
-}
+});

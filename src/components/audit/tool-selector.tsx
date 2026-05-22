@@ -54,8 +54,7 @@ export function ToolSelector() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
+    <div
       className="rounded-3xl border border-border bg-background/55 p-5"
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
@@ -135,11 +134,11 @@ export function ToolSelector() {
           </div>
         </div>
 
-        <Button type="submit" className="h-12 lg:mb-0">
+        <Button type="button" onClick={handleSubmit(onSubmit)} className="h-12 lg:mb-0">
           <Plus className="mr-2 size-4" />
           Add Tool
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

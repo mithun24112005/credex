@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Cell,
   Pie,
@@ -17,7 +18,7 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0
 });
 
-export function SpendDistributionChart({ data }: { data: SpendBreakdownItem[] }) {
+export const SpendDistributionChart = memo(function SpendDistributionChart({ data }: { data: SpendBreakdownItem[] }) {
   return (
     <div
       className="h-72 w-full"
@@ -55,4 +56,4 @@ export function SpendDistributionChart({ data }: { data: SpendBreakdownItem[] })
       </ResponsiveContainer>
     </div>
   );
-}
+});

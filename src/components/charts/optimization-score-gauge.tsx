@@ -1,8 +1,9 @@
 "use client";
 
+import { memo } from "react";
 import { RadialBar, RadialBarChart, ResponsiveContainer } from "recharts";
 
-export function OptimizationScoreGauge({ score }: { score: number }) {
+export const OptimizationScoreGauge = memo(function OptimizationScoreGauge({ score }: { score: number }) {
   const data = [{ name: "Efficiency", value: score, fill: "hsl(var(--primary))" }];
 
   return (
@@ -31,4 +32,4 @@ export function OptimizationScoreGauge({ score }: { score: number }) {
       </div>
     </div>
   );
-}
+});

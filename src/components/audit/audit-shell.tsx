@@ -27,7 +27,7 @@ export function AuditShell() {
   const showControls = currentStep < 4;
 
   return (
-    <main className="relative overflow-hidden">
+    <main className="relative overflow-hidden" role="main">
       <div className="surface-line absolute inset-x-0 top-0 h-[520px] opacity-45" />
       <div className="absolute left-1/2 top-20 h-72 w-[620px] -translate-x-1/2 rounded-full bg-primary/12 blur-3xl" />
       <div className="relative mx-auto max-w-6xl pb-28 pt-10 container-px sm:pb-16">
@@ -46,7 +46,7 @@ export function AuditShell() {
 
         <ProgressHeader currentStep={currentStep} />
 
-        <section className="mt-6 rounded-3xl border border-border bg-card/80 p-5 shadow-card backdrop-blur sm:p-8">
+        <section className="mt-6 rounded-3xl border border-border bg-card/80 p-4 shadow-card backdrop-blur sm:p-6 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}

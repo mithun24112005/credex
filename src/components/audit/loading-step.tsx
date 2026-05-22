@@ -3,34 +3,72 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { useAuditStore } from "@/store/audit-store";
 
 const stages = [
   "Analyzing subscriptions...",
   "Comparing pricing models...",
   "Finding optimization opportunities...",
-  "Generating recommendations...",
+  "Generating AI summary...",
   "Preparing audit dashboard..."
 ];
 
 export function LoadingStep() {
   const router = useRouter();
   const [activeStage, setActiveStage] = useState(0);
+  const [error, setError] = useState("");
+  const teamSize = useAuditStore((state) => state.teamSize);
+  const companyStage = useAuditStore((state) => state.companyStage);
+  const useCase = useAuditStore((state) => state.useCase);
+  const tools = useAuditStore((state) => state.tools);
 
   useEffect(() => {
+    let cancelled = false;
     const interval = window.setInterval(() => {
       setActiveStage((stage) => Math.min(stage + 1, stages.length - 1));
     }, 560);
 
-    const timeout = window.setTimeout(() => {
-      router.push("/results/live");
-    }, 3300);
+    async function createSavedAudit() {
+      try {
+        const response = await fetch("/api/audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            teamSize,
+            companyStage,
+            useCase,
+            tools
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Audit creation failed.");
+        }
+
+        const data = (await response.json()) as { publicId: string };
+
+        await new Promise((resolve) => window.setTimeout(resolve, 900));
+
+        if (!cancelled) {
+          router.push(`/results/live?id=${data.publicId}`);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("We could not save this audit. You can retry or view a local report.");
+        }
+      }
+    }
+
+    createSavedAudit();
 
     return () => {
+      cancelled = true;
       window.clearInterval(interval);
-      window.clearTimeout(timeout);
     };
-  }, [router]);
+  }, [companyStage, router, teamSize, tools, useCase]);
 
   const progress = ((activeStage + 1) / stages.length) * 100;
 
@@ -57,8 +95,8 @@ export function LoadingStep() {
           Preparing your audit dashboard
         </h2>
         <p className="mx-auto mt-4 max-w-xl leading-7 text-muted-foreground">
-          We are simulating the analysis layer for this frontend phase before
-          sending you to the demo results page.
+          StackPilot is saving your report, running conservative calculations,
+          and preparing a shareable audit dashboard.
         </p>
 
         <div className="mx-auto mt-9 max-w-xl">
@@ -91,6 +129,28 @@ export function LoadingStep() {
               </motion.div>
             ))}
           </div>
+          {error ? (
+            <div className="mt-6 rounded-2xl border border-primary/25 bg-primary/10 p-4 text-left">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="mt-0.5 size-4 text-primary" />
+                <div>
+                  <p className="text-sm font-medium text-primary">{error}</p>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                    <Button type="button" onClick={() => window.location.reload()}>
+                      Retry save
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => router.push("/results/live")}
+                    >
+                      View local report
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -12,9 +13,12 @@ import {
   ShieldCheck
 } from "lucide-react";
 
+import { ErrorCard } from "@/components/shared/error-card";
+import { Skeleton } from "@/components/shared/skeleton";
 import { OptimizationScoreGauge } from "@/components/charts/optimization-score-gauge";
 import { SavingsOpportunityChart } from "@/components/charts/savings-opportunity-chart";
 import { SpendDistributionChart } from "@/components/charts/spend-distribution-chart";
+import { LeadCaptureCard } from "@/components/results/lead-capture-card";
 import { MetricCard } from "@/components/results/metric-card";
 import { SummaryCard } from "@/components/results/summary-card";
 import { ToolAnalysisCard } from "@/components/results/tool-analysis-card";
@@ -22,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { calculateAuditReport } from "@/features/audit-engine";
 import { demoAuditInput } from "@/features/audit-engine/utils/demo-input";
+import type { PublicReportPayload } from "@/services/share/types";
 import { useAuditStore } from "@/store/audit-store";
 
 const currency = new Intl.NumberFormat("en-US", {
@@ -30,11 +35,91 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0
 });
 
-export function ResultsDashboard() {
+type ResultsDashboardProps = {
+  initialPublicReport?: PublicReportPayload | null;
+  isPublic?: boolean;
+};
+
+export function ResultsDashboard({
+  initialPublicReport,
+  isPublic = false
+}: ResultsDashboardProps) {
+  const searchParams = useSearchParams();
+  const publicIdFromUrl = searchParams.get("id");
   const teamSize = useAuditStore((state) => state.teamSize);
   const companyStage = useAuditStore((state) => state.companyStage);
   const useCase = useAuditStore((state) => state.useCase);
   const tools = useAuditStore((state) => state.tools);
+  const [remoteReport, setRemoteReport] = useState<PublicReportPayload | null>(
+    initialPublicReport ?? null
+  );
+  const [loading, setLoading] = useState(Boolean(publicIdFromUrl && !initialPublicReport));
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const loadReport = useCallback(async () => {
+    if (!publicIdFromUrl) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(`/api/share/${publicIdFromUrl}`);
+
+      if (!response.ok) {
+        throw new Error("Report not found.");
+      }
+
+      const data = (await response.json()) as PublicReportPayload;
+      setRemoteReport(data);
+    } catch {
+      setError("This report could not be loaded. It may have expired or the link may be invalid.");
+    } finally {
+      setLoading(false);
+    }
+  }, [publicIdFromUrl]);
+
+  useEffect(() => {
+    if (!publicIdFromUrl || initialPublicReport) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchReport() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(`/api/share/${publicIdFromUrl}`);
+
+        if (!response.ok) {
+          throw new Error("Report not found.");
+        }
+
+        const data = (await response.json()) as PublicReportPayload;
+
+        if (!cancelled) {
+          setRemoteReport(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setError("This report could not be loaded. It may have expired or the link may be invalid.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchReport();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialPublicReport, publicIdFromUrl]);
 
   const input = useMemo(
     () =>
@@ -48,8 +133,92 @@ export function ResultsDashboard() {
         : demoAuditInput,
     [companyStage, teamSize, tools, useCase]
   );
-  const report = useMemo(() => calculateAuditReport(input), [input]);
-  const usingFallback = tools.length === 0;
+
+  const localReport = useMemo(() => calculateAuditReport(input), [input]);
+  const report = remoteReport?.report ?? localReport;
+  const publicId = remoteReport?.publicId ?? publicIdFromUrl ?? undefined;
+  const usingFallback = !remoteReport && tools.length === 0;
+  const shareUrl = publicId ? `/share/${publicId}` : "";
+
+  async function saveAudit() {
+    if (tools.length === 0 || !teamSize || !companyStage || !useCase) {
+      setSaveError("Complete an audit with at least one tool before saving.");
+      return;
+    }
+
+    setSaving(true);
+    setSaveError("");
+
+    try {
+      const response = await fetch("/api/audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamSize, companyStage, useCase, tools })
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save audit.");
+      }
+
+      const data = (await response.json()) as { publicId: string };
+      setRemoteReport({
+        publicId: data.publicId,
+        teamSize,
+        companyStage,
+        useCase,
+        tools,
+        report,
+        createdAt: new Date().toISOString()
+      });
+    } catch {
+      setSaveError("We could not save this audit right now. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="relative overflow-hidden">
+        <div className="surface-line absolute inset-x-0 top-0 h-[560px] opacity-45" />
+        <div className="absolute left-1/2 top-16 h-72 w-[680px] -translate-x-1/2 rounded-full bg-primary/12 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl py-10 container-px">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Skeleton className="h-10 w-32" />
+            <Skeleton className="h-7 w-28" />
+          </div>
+          <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+            <Card className="overflow-hidden bg-card/82">
+              <CardContent className="relative p-7 sm:p-10">
+                <div className="space-y-4">
+                  <Skeleton className="h-7 w-44" />
+                  <Skeleton className="h-12 w-full max-w-lg" />
+                  <Skeleton className="h-6 w-full max-w-sm" />
+                </div>
+              </CardContent>
+            </Card>
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              {[0, 1, 2].map((i) => (
+                <Card key={i} className="bg-card/82">
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      <Skeleton className="h-5 w-24" />
+                      <Skeleton className="h-8 w-32" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return <ErrorCard message={error} retry={loadReport} retryLabel="Retry" />;
+  }
 
   return (
     <main className="relative overflow-hidden">
@@ -58,9 +227,9 @@ export function ResultsDashboard() {
       <div className="relative mx-auto max-w-7xl py-10 container-px">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button asChild variant="ghost">
-            <Link href="/audit">
+            <Link href={isPublic ? "/" : "/audit"}>
               <ArrowLeft className="mr-2 size-4" />
-              Back to audit
+              {isPublic ? "Back to StackPilot" : "Back to audit"}
             </Link>
           </Button>
           {usingFallback ? (
@@ -81,15 +250,16 @@ export function ResultsDashboard() {
               <div className="relative">
                 <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-sm text-muted-foreground">
                   <ShieldCheck className="size-4 text-primary" />
-                  Live frontend audit
+                  {remoteReport ? "Saved audit report" : "Live frontend audit"}
                 </p>
                 <h1 className="text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
                   {currency.format(report.annualSavings)} in conservative annual
                   savings identified
                 </h1>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                  A frontend-only audit report using your local wizard inputs,
-                  conservative pricing rules, and defensible optimization logic.
+                  A saved audit report using your wizard inputs, conservative
+                  pricing rules, AI summary generation, and defensible
+                  optimization logic.
                 </p>
               </div>
             </CardContent>
@@ -146,7 +316,7 @@ export function ResultsDashboard() {
                   >
                     <span className="text-muted-foreground">{item.name}</span>
                     <span className="font-medium">
-                      {currency.format(item.value)} · {item.percentage}%
+                      {currency.format(item.value)} &middot; {item.percentage}%
                     </span>
                   </div>
                 ))}
@@ -198,21 +368,58 @@ export function ResultsDashboard() {
           </Card>
           <Card className="bg-card/82">
             <CardContent className="p-7">
-              <p className="text-sm text-muted-foreground">Share placeholder</p>
+              <p className="text-sm text-muted-foreground">Share report</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">
                 Package this for your team
               </h2>
               <p className="mt-4 leading-7 text-muted-foreground">
-                Share URLs and export workflows are intentionally reserved for a
-                later backend phase.
+                Public reports only expose spend, savings, recommendations, and
+                summary data. Lead details are never included.
               </p>
-              <Button className="mt-6" disabled>
-                <Download className="mr-2 size-4" />
-                Generate Shareable Report
-              </Button>
+              {publicId ? (
+                <Button asChild className="mt-6">
+                  <Link href={`/share/${publicId}`}>
+                    <Download className="mr-2 size-4" />
+                    Open Shareable Report
+                  </Link>
+                </Button>
+              ) : (
+                <Button className="mt-6" onClick={saveAudit} disabled={saving || usingFallback}>
+                  <Download className="mr-2 size-4" />
+                  {saving ? "Saving..." : "Save Audit & Enable Sharing"}
+                </Button>
+              )}
+              {saveError ? (
+                <p className="mt-4 text-sm text-primary">{saveError}</p>
+              ) : null}
+              {shareUrl ? (
+                <div className="mt-4 flex items-center gap-2">
+                  <input
+                    readOnly
+                    value={typeof window !== "undefined" ? `${window.location.origin}${shareUrl}` : shareUrl}
+                    className="flex-1 rounded-xl border border-border bg-background/60 px-3 py-2 text-xs font-mono text-muted-foreground outline-none"
+                    onClick={(e) => e.currentTarget.select()}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const url = typeof window !== "undefined" ? `${window.location.origin}${shareUrl}` : shareUrl;
+                      navigator.clipboard.writeText(url);
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </section>
+        {!isPublic ? (
+          <section className="mt-6">
+            <LeadCaptureCard publicId={publicId} />
+          </section>
+        ) : null}
       </div>
     </main>
   );
