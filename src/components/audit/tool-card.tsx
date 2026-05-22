@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
+import { ToolIcon } from "@/components/shared/tool-icon";
 import { Button } from "@/components/ui/button";
 import { aiToolNames, toolMeta, toolPlans } from "@/config/audit";
 import { toolSchema, type ToolFormValues } from "@/lib/audit-validation";
@@ -33,7 +34,6 @@ export function ToolCard({ tool }: { tool: AuditTool }) {
   const selectedValues = watch();
   const plans = toolPlans[selectedTool];
   const meta = toolMeta[selectedTool];
-  const Icon = meta.icon;
 
   useEffect(() => {
     if (!plans.includes(selectedValues.plan)) {
@@ -65,7 +65,7 @@ export function ToolCard({ tool }: { tool: AuditTool }) {
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className={cn("grid size-12 place-items-center rounded-2xl", meta.accent)}>
-            <Icon className="size-5" />
+            <ToolIcon tool={selectedTool} className="size-8" />
           </div>
           <div>
             <p className="font-semibold tracking-tight">{selectedTool}</p>

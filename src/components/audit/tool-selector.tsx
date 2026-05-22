@@ -5,8 +5,9 @@ import { Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
+import { ToolIcon } from "@/components/shared/tool-icon";
 import { Button } from "@/components/ui/button";
-import { aiToolNames, toolMeta, toolPlans } from "@/config/audit";
+import { aiToolNames, toolPlans } from "@/config/audit";
 import { toolSchema, type ToolFormValues } from "@/lib/audit-validation";
 import { cn } from "@/lib/utils";
 import { useAuditStore } from "@/store/audit-store";
@@ -33,8 +34,6 @@ export function ToolSelector() {
 
   const selectedTool = watch("name") as AiToolName;
   const plans = toolPlans[selectedTool];
-  const meta = toolMeta[selectedTool];
-  const Icon = meta.icon;
 
   useEffect(() => {
     const currentPlan = watch("plan");
@@ -63,7 +62,10 @@ export function ToolSelector() {
             Tool
           </label>
           <div className="relative">
-            <Icon className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-primary" />
+            <ToolIcon
+              tool={selectedTool}
+              className="pointer-events-none absolute left-3.5 top-1/2 size-5 -translate-y-1/2"
+            />
             <select
               id="new-tool"
               className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-4 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/40"

@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
+import { ToolIcon } from "@/components/shared/tool-icon";
 import { toolMeta } from "@/config/audit";
 import type { ToolAnalysis } from "@/features/audit-engine";
 import { cn } from "@/lib/utils";
@@ -26,14 +27,13 @@ const statusClass: Record<ToolAnalysis["status"], string> = {
 
 export function ToolAnalysisCard({ analysis }: { analysis: ToolAnalysis }) {
   const meta = toolMeta[analysis.toolName];
-  const Icon = meta.icon;
 
   return (
     <article className="rounded-3xl border border-border bg-background/55 p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-3">
           <div className={cn("grid size-12 place-items-center rounded-2xl", meta.accent)}>
-            <Icon className="size-5" />
+            <ToolIcon tool={analysis.toolName} className="size-8" />
           </div>
           <div>
             <h3 className="font-semibold tracking-tight">{analysis.toolName}</h3>

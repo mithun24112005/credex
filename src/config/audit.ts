@@ -80,24 +80,56 @@ export const toolPlans: Record<AiToolName, string[]> = {
 
 export const toolMeta: Record<
   AiToolName,
-  { icon: LucideIcon; accent: string; shortName: string }
+  { icon: LucideIcon; iconPath: string; accent: string; shortName: string }
 > = {
-  ChatGPT: { icon: Bot, accent: "bg-primary/10 text-primary", shortName: "GPT" },
-  Claude: { icon: Braces, accent: "bg-foreground/10 text-foreground", shortName: "CLD" },
-  Cursor: { icon: Code2, accent: "bg-primary/10 text-primary", shortName: "CUR" },
+  ChatGPT: {
+    icon: Bot,
+    iconPath: "/icons/chatgpt.png",
+    accent: "bg-primary/10 text-primary",
+    shortName: "GPT"
+  },
+  Claude: {
+    icon: Braces,
+    iconPath: "/icons/claude.png",
+    accent: "bg-foreground/10 text-foreground",
+    shortName: "CLD"
+  },
+  Cursor: {
+    icon: Code2,
+    iconPath: "/icons/cursor.svg",
+    accent: "bg-primary/10 text-primary",
+    shortName: "CUR"
+  },
   "GitHub Copilot": {
     icon: Github,
+    iconPath: "/icons/github-copilot.svg",
     accent: "bg-foreground/10 text-foreground",
     shortName: "GHC"
   },
-  Gemini: { icon: Bot, accent: "bg-primary/10 text-primary", shortName: "GEM" },
-  "OpenAI API": { icon: FileCode2, accent: "bg-primary/10 text-primary", shortName: "API" },
+  Gemini: {
+    icon: Bot,
+    iconPath: "/icons/gemini.png",
+    accent: "bg-primary/10 text-primary",
+    shortName: "GEM"
+  },
+  "OpenAI API": {
+    icon: FileCode2,
+    iconPath: "/icons/openai.svg",
+    accent: "bg-primary/10 text-primary",
+    shortName: "API"
+  },
   "Anthropic API": {
     icon: Braces,
+    iconPath: "/icons/anthropic.svg",
     accent: "bg-foreground/10 text-foreground",
     shortName: "ANT"
   },
-  Windsurf: { icon: Code2, accent: "bg-primary/10 text-primary", shortName: "WND" }
+  Windsurf: {
+    icon: Code2,
+    iconPath: "/icons/windsurf.svg",
+    accent: "bg-primary/10 text-primary",
+    shortName: "WND"
+  }
 };
 
 export const aiToolNames = Object.keys(toolPlans) as AiToolName[];

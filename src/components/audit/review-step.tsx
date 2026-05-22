@@ -3,6 +3,7 @@
 import { CheckCircle2, Pencil, Users } from "lucide-react";
 
 import { SpendSummary } from "@/components/audit/spend-summary";
+import { ToolIcon } from "@/components/shared/tool-icon";
 import { Button } from "@/components/ui/button";
 import { toolMeta } from "@/config/audit";
 import { cn } from "@/lib/utils";
@@ -93,7 +94,6 @@ export function ReviewStep({ onComplete }: { onComplete: () => void }) {
           <div className="grid gap-3">
             {tools.map((tool) => {
               const meta = toolMeta[tool.name];
-              const Icon = meta.icon;
 
               return (
                 <div
@@ -107,7 +107,7 @@ export function ReviewStep({ onComplete }: { onComplete: () => void }) {
                         meta.accent
                       )}
                     >
-                      <Icon className="size-4" />
+                      <ToolIcon tool={tool.name} className="size-7" />
                     </div>
                     <div>
                       <p className="font-medium">{tool.name}</p>
